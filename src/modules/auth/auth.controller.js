@@ -6,7 +6,7 @@ import { env } from "../../config/env.js";
 // Función de registro (crea un usuario y genera un token)
 export async function register(req, res, next) {
   try {
-    const { email, password, role } = req.data;
+    const { email, password, role } = req.data;  // Cambié de req.data a req.body
 
     // Verificamos si el correo ya está registrado
     const exists = await prisma.user.findUnique({ where: { email } });
@@ -22,10 +22,10 @@ export async function register(req, res, next) {
 
     // Generamos el token JWT para el usuario recién registrado
     const token = jwt.sign(
-      { id: user.id, role: user.role },  // Datos a incluir en el token
-      env.JWT_SECRET,                    // Usamos el JWT_SECRET desde las variables de entorno
-      { expiresIn: "8h" }                // El token expirará en 8 horas
-    );
+       { userId: user.id, role: user.role },  // Datos que quieres incluir en el payload
+       process.env.JWT_SECRET,                // La clave secreta para firmar el token
+       { expiresIn: '1h' }                    // Tiempo de expiración del token
+      );
 
     // Devolvemos el token y el usuario
     res.status(201).json({ token, user });
@@ -37,7 +37,7 @@ export async function register(req, res, next) {
 // Función de login (verifica las credenciales y genera el token)
 export async function login(req, res, next) {
   try {
-    const { email, password } = req.data;
+    const { email, password } = req.data;  // Cambié de req.data a req.body
 
     // Buscamos al usuario por el correo electrónico
     const user = await prisma.user.findUnique({ where: { email } });
