@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"  
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Supplier {
+  id          Int        @id @default(autoincrement())
+  name        String
+  taxId       String?
+  isCertified Boolean    @default(false)
+  materials   Material[]
+}
+
+model Material {
+  id          Int       @id @default(autoincrement())
+  name        String
+  type        String
+  sku         String    @unique
+  unit        String
+  stock       Int       @default(0)
+  minStock    Int       @default(0)
+  supplierId  Int
+  supplier    Supplier   @relation(fields: [supplierId], references: [id])
+  movements   InventoryMovement[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model InventoryMovement {
+  id         Int      @id @default(autoincrement())
+  materialId Int
+  material   Material @relation(fields: [materialId], references: [id])
+  type       String
+  qty        Int
+  reason     String?
+  createdAt  DateTime @default(now())
+}
+
+model Product {
+  id          Int           @id @default(autoincrement())
+  name        String
+  code        String        @unique
+  price       Float
+  category    String
+  stock       Int           @default(0)
+  minStock    Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  certificates Certificate[]
+  saleItems    SaleItem[]
+}
+
+model Certificate {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id])
+  hash       String   @unique
+  network    String
+  createdAt  DateTime @default(now())
+}
+
+model Sale {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  total     Float
+  items     SaleItem[]
+}
+
+model SaleItem {
+  id         Int      @id @default(autoincrement())
+  saleId     Int
+  sale       Sale     @relation(fields: [saleId], references: [id])
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id])
+  qty        Int
+  unitPrice  Float
+}
